@@ -17,6 +17,7 @@
 // Remove this while using gcc:
 //#include "stdbool.h"
 #include <memory.h>
+#include <pthread.h>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Constants and static tables portion.
@@ -57,8 +58,9 @@
 // - A: the input.
 #define Q_REDUCE(A) (((A) & 0xff) - ((A) >> 8))
 
-// Since we need to do the setup only once, this is the indicator variable:
-static bool wasSetupDone = false;
+// Thread-safe initialization using pthread_once
+static pthread_once_t init_once = PTHREAD_ONCE_INIT;
+static bool wasSetupDone = false; // Keep for compatibility/debugging
 
 // This array stores the powers of omegas that correspond to the indices, which are the input
 // values. Known also as the "outer FFT twiddle factors".
@@ -602,9 +604,6 @@ void InitializeSWIFFTX()
 	int omegaPowers[2 * N];
 	omegaPowers[0] = 1;
 
-	if (wasSetupDone)
-		return;
-
 	for (i = 1; i < (2 * N); ++i)
 	{
 		omegaPowers[i] = Center(omegaPowers[i - 1] * OMEGA);
@@ -634,6 +633,12 @@ void InitializeSWIFFTX()
 	}
 
 	wasSetupDone = true;
+}
+
+// Thread-safe public initialization function
+void InitializeSWIFFTX()
+{
+	pthread_once(&init_once, do_swifftx_initialization);
 }
 
 void FFT(const unsigned char input[EIGHTH_N], swift_int32_t *output)
