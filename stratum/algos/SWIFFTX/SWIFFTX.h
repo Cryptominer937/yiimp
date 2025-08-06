@@ -19,7 +19,6 @@ extern "C"{
 // See the remarks concerning compatibility issues inside stdint.h.
 #include "stdint.h"
 #include "stdbool.h"
-#include <pthread.h>
 //#include "SHA3swift.h"
 
 // The size of SWIFFTX input in bytes.
